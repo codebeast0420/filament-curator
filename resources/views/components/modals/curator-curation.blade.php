@@ -3,9 +3,8 @@
 >
     <div
         class="flex-1 relative flex flex-col lg:flex-row overflow-hidden"
-        x-ignore
-        ax-load="visible"
-        ax-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('curation', 'awcodes/curator') }}"
+        x-load="visible"
+        x-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('curation', 'awcodes/curator') }}"
         x-data="curation({
             statePath: '{{ $statePath }}',
             fileName: '{{ $media->name }}',
@@ -24,6 +23,7 @@
                     x-on:ready="setData()"
                     x-on:crop="updateData()"
                     class="h-full w-auto"
+                    alt=""
                 />
             </div>
         </div>
