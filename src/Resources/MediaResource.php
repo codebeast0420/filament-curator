@@ -97,7 +97,16 @@ class MediaResource extends Resource
                             ->hiddenOn('edit')
                             ->schema([
                                 static::getUploaderField()
-                                    ->required(),
+                                    ->required()
+                                    ->live()
+                                    ->afterStateUpdated(function($state, $set, $component){
+                                        $name = $component->getSuggestedFileName($state);
+                                        $set('name', $name);
+                                    })
+                                    ->getUploadedFileNameForStorageUsing(function ($get, $file, $component) {
+                                        $name = $get('name');
+                                        return !$name->isEmpty() ? Str::slug($name) : $component->getSuggestedFileName($file);
+                                    })
                             ]),
                         Forms\Components\Tabs::make('image')
                             ->hiddenOn('create')
@@ -287,8 +296,7 @@ class MediaResource extends Resource
         return [
             Forms\Components\TextInput::make('name')
                 ->label(trans('curator::forms.fields.name'))
-                ->hiddenOn('create')
-                ->required()
+                ->required(fn ($operation): bool => $operation == 'edit')
                 ->dehydrateStateUsing(function ($component, $state) {
                     $slugged = Str::slug($state);
                     $component->state($slugged);

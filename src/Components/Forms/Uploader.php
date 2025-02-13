@@ -78,9 +78,19 @@ class Uploader extends FileUpload
         $this->state($state);
     }
 
+    public function getSuggestedFileName(TemporaryUploadedFile $file){
+        return $this->shouldPreserveFilenames()
+            ? Str::of(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME))->slug()
+            : (string) Str::uuid();
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->getUploadedFileNameForStorageUsing(function (Uploader $component, TemporaryUploadedFile $file) {
+            return $component->getSuggestedFileName($file);
+        });
 
         $this->saveUploadedFileUsing(function (BaseFileUpload $component, TemporaryUploadedFile $file): ?array {
             try {
@@ -91,9 +101,7 @@ class Uploader extends FileUpload
                 return null;
             }
 
-            $filename = $component->shouldPreserveFilenames()
-                ? Str::of(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME))->slug()
-                : (string) Str::uuid();
+            $filename = $component->getUploadedFileNameForStorage($file);
 
             $extension = $file->getClientOriginalExtension();
 
