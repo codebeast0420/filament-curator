@@ -20,6 +20,8 @@
         <x-curator::document-image
             label="{{ $media->name }}"
             icon-size="xl"
+            type="{{ $media->type }}"
+            extension="{{ $media->ext }}"
             {{ $attributes->merge(['class' => 'p-4']) }}
         />
     @endif

@@ -57,6 +57,8 @@
                                 @else
                                     <x-curator::document-image
                                         label="{{ $item['name'] }}"
+                                        type="{{ $item['type'] }}"
+                                        extension="{{ $item['ext'] }}"
                                         icon-size="md"
                                     />
                                 @endif
@@ -127,6 +129,8 @@
                             <x-curator::document-image
                                 label="{{ $item['name'] }}"
                                 icon-size="xl"
+                                type="{{ $item['type'] }}"
+                                extension="{{ $item['ext'] }}"
                             />
                         @endif
 
