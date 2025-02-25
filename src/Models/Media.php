@@ -45,16 +45,16 @@ class Media extends Model
                 }
 
                 try {
-                    $isPrivate = config('curator.visibility','public') === 'private' || Storage::disk($this->disk)->getVisibility($this->path) === 'private ';
+                    $isPrivate = config('curator.visibility', 'public') === 'private' || Storage::disk($this->disk)->getVisibility($this->path) === 'private ';
                 } catch (\Throwable) {
                     // ACL not supported on Storage Bucket, Laravel only throws exception here so need to be careful.
                     // so we assume it's private $isPrivate = config(sprintf('filesystems.disks.%s.visibility', $this->disk)) !== 'public';
                 }
 
-                    return $isPrivate ? Storage::disk($this->disk)->temporaryUrl(
-                        $this->path,
-                        now()->addMinutes(5)
-                    ) : Storage::disk($this->disk)->url($this->path);
+                return $isPrivate ? Storage::disk($this->disk)->temporaryUrl(
+                    $this->path,
+                    now()->addMinutes(5)
+                ) : Storage::disk($this->disk)->url($this->path);
             },
         );
     }
