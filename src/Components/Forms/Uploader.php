@@ -78,7 +78,8 @@ class Uploader extends FileUpload
         $this->state($state);
     }
 
-    public function getSuggestedFileName(TemporaryUploadedFile $file){
+    public function getSuggestedFileName(TemporaryUploadedFile $file)
+    {
         return $this->shouldPreserveFilenames()
             ? Str::of(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME))->slug()
             : (string) Str::uuid();
