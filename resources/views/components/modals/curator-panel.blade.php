@@ -191,13 +191,17 @@
                     <div class="flex items-center justify-start mt-auto gap-3 py-3 px-4 border-t border-gray-300 bg-gray-200 dark:border-gray-800 dark:bg-black/10">
                         @if (count($selected) !== 1)
                             <div>
-                                {{ $this->addFilesAction }}
+                                @if ($this->addFilesAction->isVisible())
+                                    {{ $this->addFilesAction }}
+                                @endif
                                 {{ $this->addInsertFilesAction }}
                             </div>
                         @endif
                         @if (count($selected) === 1)
                             <div class="flex gap-3">
-                                {{ $this->updateFileAction }}
+                                @if ($this->updateFileAction->isVisible())
+                                    {{ $this->updateFileAction }}
+                                @endif
                                 {{ $this->cancelEditAction }}
                             </div>
                         @endif

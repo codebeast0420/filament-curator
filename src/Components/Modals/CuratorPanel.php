@@ -3,6 +3,7 @@
 namespace Awcodes\Curator\Components\Modals;
 
 use Awcodes\Curator\Components\Forms\Uploader;
+use Awcodes\Curator\CuratorPlugin;
 use Awcodes\Curator\Models\Media;
 use Awcodes\Curator\PathGenerators\Contracts\PathGenerator;
 use Awcodes\Curator\Resources\MediaResource;
@@ -20,6 +21,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -100,9 +102,12 @@ class CuratorPanel extends Component implements HasActions, HasForms
 
     public string $defaultSort = 'desc';
 
+    public ?Media $mediaClass = null;
+
     public function mount(): void
     {
         $this->form->fill();
+        $this->mediaClass = App::make(Media::class);
     }
 
     #[On('open-modal')]
@@ -154,7 +159,13 @@ class CuratorPanel extends Component implements HasActions, HasForms
         return $form
             ->schema([
                 Uploader::make('files_to_add')
-                    ->visible(fn () => count($this->selected) !== 1)
+                    ->visible(function () {
+                        return count($this->selected) !== 1 &&
+                            (
+                                is_null(Gate::getPolicyFor($this->mediaClass)) ||
+                                Gate::allows('create', $this->mediaClass)
+                            );
+                    })
                     ->hiddenLabel()
                     ->required()
                     ->multiple()
@@ -184,14 +195,19 @@ class CuratorPanel extends Component implements HasActions, HasForms
                                 $this->destroyAction(),
                             ],
                         ]),
-                    ...App::make(MediaResource::class)->getAdditionalInformationFormSchema(),
+                    ...collect(App::make(MediaResource::class)->getAdditionalInformationFormSchema())
+                        ->map(function ($field) {
+                            return $field->disabled(function() {
+                                return ! CuratorPlugin::get()->authorize('update');
+                            });
+                        })->toArray(),
                 ])->visible(fn () => filled($this->selected) && count($this->selected) === 1),
             ])->statePath('data');
     }
 
     public function getFiles(int $page = 0, bool $excludeSelected = false): array
     {
-        $files = App::make(Media::class)->query()
+        $files = $this->mediaClass->query()
             ->when(filament()->hasTenancy() && $this->isTenantAware, function ($query) {
                 return $query->where($this->tenantOwnershipRelationshipName . '_id', filament()->getTenant()->id);
             })
@@ -224,7 +240,8 @@ class CuratorPanel extends Component implements HasActions, HasForms
         if (! $excludeSelected && $this->selected) {
             $selected = collect($this->selected)->pluck('id')->toArray();
 
-            $selectedItems = App::make(Media::class)
+            $selectedItems = $this->mediaClass
+                ->query()
                 ->whereIn('id', $selected)
                 ->get()
                 ->sortBy(function ($model) use ($selected) {
@@ -288,7 +305,8 @@ class CuratorPanel extends Component implements HasActions, HasForms
 
     public function updatedSearch(): void
     {
-        $this->files = App::make(Media::class)
+        $this->files = $this->mediaClass
+            ->query()
             ->when($this->isLimitedToDirectory, function ($query) {
                 return $query->where('directory', $this->directory);
             })
@@ -305,7 +323,7 @@ class CuratorPanel extends Component implements HasActions, HasForms
     public function setMediaForm(): void
     {
         if (count($this->selected) === 1) {
-            $item = App::make(Media::class)->find(Arr::first($this->selected)['id']);
+            $item = $this->mediaClass->find(Arr::first($this->selected)['id']);
             if ($item) {
                 $this->form->fill($item->toArray());
             }
@@ -323,6 +341,9 @@ class CuratorPanel extends Component implements HasActions, HasForms
             ->label(trans('curator::views.panel.add_files'))
             ->disabled(function (): bool {
                 return count($this->form->getRawState()['files_to_add'] ?? []) === 0;
+            })
+            ->visible(function () {
+                return CuratorPlugin::get()->authorize('create');
             })
             ->action(function () use ($insertAfter): void {
                 $media = self::createMediaFiles($this->form->getState());
@@ -386,13 +407,16 @@ class CuratorPanel extends Component implements HasActions, HasForms
                 'style' => 'border: none; margin: 0;',
             ])
             ->requiresConfirmation()
+            ->visible(function () {
+                return CuratorPlugin::get()->authorize('delete');
+            })
             ->action(function (array $arguments): void {
                 if (empty($arguments)) {
                     return;
                 }
 
                 try {
-                    $item = App::make(Media::class)->find($arguments['item']['id']);
+                    $item = $this->mediaClass->find($arguments['item']['id']);
                     if ($item) {
                         $this->form->fill();
                         $item->delete();
@@ -425,6 +449,9 @@ class CuratorPanel extends Component implements HasActions, HasForms
             ->extraAttributes([
                 'style' => 'border: none; margin: 0;',
             ])
+            ->visible(function () {
+                return CuratorPlugin::get()->authorize('download');
+            })
             ->action(function (array $arguments): ?StreamedResponse {
                 if (empty($arguments)) {
                     return null;
@@ -460,9 +487,12 @@ class CuratorPanel extends Component implements HasActions, HasForms
             ->size('sm')
             ->color('primary')
             ->label(trans('curator::views.panel.edit_save'))
+            ->visible(function () {
+                return CuratorPlugin::get()->authorize('update');
+            })
             ->action(function (): void {
                 try {
-                    $item = App::make(Media::class)->find(Arr::first($this->selected)['id']);
+                    $item = $this->mediaClass->find(Arr::first($this->selected)['id']);
                     if ($item) {
                         $item->update($this->form->getState());
 
@@ -500,6 +530,9 @@ class CuratorPanel extends Component implements HasActions, HasForms
             ->extraAttributes([
                 'style' => 'border: none; margin: 0;',
             ])
+            ->visible(function () {
+                return CuratorPlugin::get()->authorize('view');
+            })
             ->url(function (array $arguments): ?string {
                 if (empty($arguments)) {
                     return null;
@@ -531,7 +564,7 @@ class CuratorPanel extends Component implements HasActions, HasForms
             $item['title'] = pathinfo($formData['originalFilenames'][$item['path']] ?? null, PATHINFO_FILENAME);
 
             $media[] = tap(
-                App::make(Media::class)->create($item),
+                $this->mediaClass->create($item),
                 fn (Media $media) => $media->getPrettyName(),
             )->toArray();
         }

@@ -12,6 +12,25 @@ use League\Glide\Urls\UrlBuilderFactory;
 
 use function Awcodes\Curator\is_media_resizable;
 
+/**
+ * @property int $id
+ * @property string $disk
+ * @property string $directory
+ * @property string $visibility
+ * @property string $name
+ * @property string $path
+ * @property int $width
+ * @property int $height
+ * @property int $size
+ * @property string $type
+ * @property string $ext
+ * @property string $alt
+ * @property string $title
+ * @property string $description
+ * @property string $caption
+ * @property array $exif
+ * @property array $curations
+ */
 class Media extends Model
 {
     use HasPackageFactory;
@@ -40,21 +59,26 @@ class Media extends Model
     {
         return Attribute::make(
             get: function () {
-                if (config('curator.should_check_exists', true) && Storage::disk($this->disk)->exists($this->path) === false) {
+                $isPrivate = false;
+
+                if (
+                    config('curator.should_check_exists', true)
+                    && Storage::disk($this->disk)->exists($this->path) === false
+                ) {
                     return '';
                 }
 
                 try {
-                    $isPrivate = config('curator.visibility', 'public') === 'private' || Storage::disk($this->disk)->getVisibility($this->path) === 'private ';
+                    $isPrivate = config('curator.visibility', 'public') === 'private'
+                        || Storage::disk($this->disk)->getVisibility($this->path) === 'private ';
                 } catch (\Throwable) {
                     // ACL not supported on Storage Bucket, Laravel only throws exception here so need to be careful.
                     // so we assume it's private $isPrivate = config(sprintf('filesystems.disks.%s.visibility', $this->disk)) !== 'public';
                 }
 
-                return $isPrivate ? Storage::disk($this->disk)->temporaryUrl(
-                    $this->path,
-                    now()->addMinutes(5)
-                ) : Storage::disk($this->disk)->url($this->path);
+                return $isPrivate
+                    ? Storage::disk($this->disk)->temporaryUrl($this->path, now()->addMinutes(5))
+                    : Storage::disk($this->disk)->url($this->path);
             },
         );
     }

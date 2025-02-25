@@ -4,6 +4,7 @@ namespace Awcodes\Curator\Components\Forms;
 
 use Awcodes\Curator\Concerns\CanGeneratePaths;
 use Awcodes\Curator\Concerns\CanUploadFiles;
+use Awcodes\Curator\CuratorPlugin;
 use Awcodes\Curator\Resources\MediaResource;
 use Closure;
 use Exception;
@@ -256,6 +257,9 @@ class CuratorPicker extends Field
             ->label(trans('curator::views.picker.download'))
             ->icon('heroicon-s-arrow-down-tray')
             ->color('gray')
+            ->visible(function () {
+                return CuratorPlugin::get()->authorize('download');
+            })
             ->action(function (array $arguments, CuratorPicker $component): StreamedResponse {
                 $item = $component->getState()[$arguments['uuid']];
 
@@ -269,7 +273,9 @@ class CuratorPicker extends Field
             ->label(trans('curator::views.picker.edit'))
             ->icon('heroicon-s-pencil')
             ->color('gray')
-            ->hidden(fn (CuratorPicker $component): bool => $component->isDisabled())
+            ->visible(function (CuratorPicker $component) {
+                return (! $component->isDisabled()) && (CuratorPlugin::get()->authorize('update'));
+            })
             ->url(function (array $arguments): string {
                 return App::make(MediaResource::class)
                     ->getUrl('edit', ['record' => $arguments['id']]);

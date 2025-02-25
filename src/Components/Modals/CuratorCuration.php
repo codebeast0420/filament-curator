@@ -23,7 +23,8 @@ class CuratorCuration extends Component
     public function saveCuration($data = null): void
     {
         if (in_array($this->media->disk, config('curator.cloud_disks'))) {
-            $filePath = Storage::disk($this->media->disk)->url($this->media->path);
+            $filePath = Storage::disk($this->media->disk)->temporaryUrl($this->media->path, now()->addMinutes(5));
+//            $filePath = Storage::disk($this->media->disk)->url($this->media->path);
         } else {
             $filePath = Storage::disk($this->media->disk)->path($this->media->path);
         }
