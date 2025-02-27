@@ -2,6 +2,7 @@
 
 namespace Awcodes\Curator\Tests;
 
+use Awcodes\Curator\CuratorPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -29,6 +30,9 @@ class AdminPanelProvider extends PanelProvider
             ->emailVerification()
             ->pages([
                 Pages\Dashboard::class,
+            ])
+            ->plugins([
+                CuratorPlugin::make(),
             ])
             ->resources([
 

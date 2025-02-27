@@ -6,6 +6,7 @@ use Awcodes\Curator\Concerns\HasPackageFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use League\Glide\Urls\UrlBuilderFactory;
@@ -30,6 +31,15 @@ use function Awcodes\Curator\is_media_resizable;
  * @property string $caption
  * @property array $exif
  * @property array $curations
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property-read string $url
+ * @property-read string $thumbnail_url
+ * @property-read string $medium_url
+ * @property-read string $large_url
+ * @property-read bool $resizable
+ * @property-read string $size_for_humans
+ * @property-read string $pretty_name
  */
 class Media extends Model
 {
