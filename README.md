@@ -602,6 +602,80 @@ class CustomMedia extends Media
 'model' => \App\Models\Cms\Media::class,
 ```
 
+### Policies
+
+To customize access control for filament-curator, you can register a policy for the `Media` model in your application.
+
+For more detailed information on how to work with policies in Laravel, please refer to the official Laravel documentation on authorization:
+- [Laravel Docs Authorization](https://laravel.com/docs/authorization)
+
+#### Step 1: Register the Policy
+
+In your `app\Providers\AppServiceProvider.php`, add the following code in the `boot()` method:
+
+```php
+public function boot(): void
+{
+    Gate::policy(\Awcodes\Curator\Models\Media::class, \App\Policies\MediaPolicy::class);
+}
+```
+
+This tells Laravel to use your custom policy when authorizing actions on the `Media` model.
+
+#### Step 2: Define the Media Policy
+
+Create a file named `MediaPolicy.php` in the `app\Policies` directory with the following content:
+
+```php
+<?php
+
+namespace App\Policies;
+
+use Awcodes\Curator\Models\Media;
+use App\Models\User;
+use Illuminate\Auth\Access\Response;
+
+class MediaPolicy
+{
+    public function viewAny(User $user): bool
+    {
+        return true;
+    }
+
+    public function view(User $user): bool
+    {
+        return true;
+    }
+
+    public function create(User $user): bool
+    {
+        return true;
+    }
+
+    public function update(User $user, Media $media): bool
+    {
+        return true;
+    }
+
+    public function delete(User $user, Media $media): bool
+    {
+        return true;
+    }
+
+    public function deleteAny(User $user): bool
+    {
+        return true;
+    }
+
+    public function download(User $user): bool
+    {
+        return true;
+    }
+}
+```
+
+By default, the above policy grants access to all actions. You can modify each method to implement your custom authorization logic as needed.
+
 <!-- docs_end -->
 
 ## Testing
