@@ -197,7 +197,7 @@ class CuratorPanel extends Component implements HasActions, HasForms
                         ]),
                     ...collect(App::make(MediaResource::class)->getAdditionalInformationFormSchema())
                         ->map(function ($field) {
-                            return $field->disabled(function() {
+                            return $field->disabled(function () {
                                 return ! CuratorPlugin::get()->authorize('update');
                             });
                         })->toArray(),

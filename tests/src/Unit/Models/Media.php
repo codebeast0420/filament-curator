@@ -79,7 +79,7 @@ test('factory creates an image', function () {
     expect($media->ext)->toBe('jpg');
 });
 
-it('returns correct local url', function() {
+it('returns correct local url', function () {
     Storage::fake('public');
 
     $media = Media::factory()->create()->fresh();
@@ -87,7 +87,7 @@ it('returns correct local url', function() {
     expect($media->url)->toBe(Storage::disk($media->disk)->url($media->path));
 });
 
-it('returns correct remote url', function() {
+it('returns correct remote url', function () {
     Storage::fake('s3');
     config()->set('curator.disk', 's3');
     config()->set('curator.visibility', 'private');
