@@ -9,8 +9,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use League\Glide\Urls\UrlBuilderFactory;
-
 use Throwable;
+
 use function Awcodes\Curator\is_media_resizable;
 
 class Media extends Model
