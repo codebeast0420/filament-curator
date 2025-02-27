@@ -4,66 +4,28 @@ namespace Awcodes\Curator\Database\Factories;
 
 use Awcodes\Curator\Models\Media;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\Facades\Image;
 
 class MediaFactory extends Factory
 {
     protected $model = Media::class;
 
+    protected ?string $directory = null;
+
+    protected ?string $disk = null;
+
+    protected ?string $type = null;
+
     public function definition(): array
     {
-        $fileName = collect([
-            'alberto-restifo-Ni4NgA64TFQ-unsplash',
-            'blake-verdoorn-cssvEZacHvQ-unsplash',
-            'daniel-roe-lpjb_UMOyx8-unsplash',
-            'dave-hoefler-lsoogGC_5dg-unsplash',
-            'david-marcu-78A265wPiO4-unsplash',
-            'dawid-zawila--G3rw6Y02D0-unsplash',
-            'eberhard-grossgasteiger-pBgnT4KH8d4-unsplash',
-            'eberhard-grossgasteiger-y2azHvupCVo-unsplash',
-            'fabian-quintero-UWQP2mh5YJI-unsplash',
-            'federico-respini-sYffw0LNr7s-unsplash',
-            'felix-mittermeier-L4-16dmZ-1c-unsplash',
-            'guillaume-briard-QegnXyECDfw-unsplash',
-            'henry-be-IicyiaPYGGI-unsplash',
-            'igor-kasalovic-tNDvFkxkBHo-unsplash',
-            'joel-vodell-TApAkERW5pQ-unsplash',
-            'kees-streefkerk-Adl90-aXYwA-unsplash',
-            'luca-bravo-zAjdgNXsMeg-unsplash',
-            'lukasz-szmigiel-jFCViYFYcus-unsplash',
-            'niko-photos-tGTVxeOr_Rs-unsplash',
-            'robert-lukeman-_RBcxo9AU-U-unsplash',
-            'robert-lukeman-zNN6ubHmruI-unsplash',
-            'tim-swaan-eOpewngf68w-unsplash',
-        ])->random() . '.jpg';
-
-        $directory = config('curator.directory');
-        $disk = config('curator.disk');
-
-        if (! Storage::disk($disk)->exists($directory . '/' . $fileName)) {
-            $fileContents = file_get_contents('https://res.cloudinary.com/aw-codes/image/upload/curator/seed-data/' . $fileName);
-            Storage::disk($disk)->put($directory . '/' . $fileName, $fileContents);
-        }
-
-        $data = Image::make(Storage::disk($disk)->path($directory . '/' . $fileName));
-
-        return [
-            'name' => $data->filename,
-            'path' => $directory . '/' . $fileName,
-            'ext' => $data->extension,
-            'type' => $data->mime(),
-            'alt' => $this->faker->words(rand(3, 8), true),
-            'title' => null,
-            'caption' => null,
-            'description' => null,
-            'width' => $data->getWidth() ?? null,
-            'height' => $data->getHeight() ?? null,
-            'disk' => $disk,
-            'directory' => $directory,
-            'size' => $data->filesize() ?? null,
-            'visibility' => 'public',
-        ];
+        return match ($this->getType()) {
+            'svg' => $this->handleSvg(),
+            'document' => $this->handleDocument(),
+            'video' => $this->handleVideo(),
+            default => $this->handleImage(),
+        };
     }
 
     public function private(): MediaFactory
@@ -79,15 +41,166 @@ class MediaFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'created_at' => \Carbon\Carbon::now()->addDays(rand(-800, 0))->addMinutes(rand(
-                    0,
-                    60 * 23
-                ))->addSeconds(rand(0, 60)),
-                'updated_at' => \Carbon\Carbon::now()->addDays(rand(-799, 0))->addMinutes(rand(
-                    0,
-                    60 * 23
-                ))->addSeconds(rand(0, 60)),
+                'created_at' => Date::now()
+                    ->addDays(mt_rand(-800, 0))
+                    ->addMinutes(mt_rand(0, 60 * 23))
+                    ->addSeconds(mt_rand(0, 60)),
+                'updated_at' => Date::now()
+                    ->addDays(mt_rand(-799, 0))
+                    ->addMinutes(mt_rand(0, 60 * 23))
+                    ->addSeconds(mt_rand(0, 60)),
             ];
         });
+    }
+
+    public function directory(string $directory): static
+    {
+        $this->directory = $directory;
+
+        return $this;
+    }
+
+    public function disk(string $disk): static
+    {
+        $this->disk = $disk;
+
+        return $this;
+    }
+
+    public function type(string $type): static
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function getDirectory(): ?string
+    {
+        return $this->directory ?? config('curator.directory');
+    }
+
+    public function getDisk(): ?string
+    {
+        return $this->disk ?? config('curator.disk');
+    }
+
+    public function getType(): string
+    {
+        return $this->type ?? 'image';
+    }
+
+    public function handleSvg(): array
+    {
+        $fakeFile = UploadedFile::fake()->create(
+            name: $this->faker->word . '.svg',
+            kilobytes: $this->faker->numberBetween(1, 100),
+            mimeType: 'image/svg+xml',
+        );
+
+        Storage::disk($this->getDisk())->put($this->getDirectory() . '/' . $fakeFile->hashName(), $fakeFile->getContent());
+
+        return [
+            'name' => $fakeFile->hashName(),
+            'path' => $this->getDirectory() . '/' . $fakeFile->hashName(),
+            'ext' => 'svg',
+            'type' => $fakeFile->getMimeType(),
+            'alt' => $this->faker->words(rand(3, 8), true),
+            'title' => null,
+            'caption' => null,
+            'description' => null,
+            'width' => null,
+            'height' => null,
+            'disk' => $this->getDisk(),
+            'directory' => $this->getDirectory(),
+            'size' => $fakeFile->getSize() ?? null,
+            'visibility' => 'public',
+        ];
+    }
+
+    public function handleDocument(): array
+    {
+        $fakeFile = UploadedFile::fake()->create(
+            name: $this->faker->word . '.pdf',
+            kilobytes: $this->faker->numberBetween(1, 100),
+            mimeType: 'application/pdf',
+        );
+
+        Storage::disk($this->getDisk())->put($this->getDirectory() . '/' . $fakeFile->hashName(), $fakeFile->getContent());
+
+        return [
+            'name' => $fakeFile->hashName(),
+            'path' => $this->getDirectory() . '/' . $fakeFile->hashName(),
+            'ext' => 'pdf',
+            'type' => $fakeFile->getMimeType(),
+            'alt' => $this->faker->words(rand(3, 8), true),
+            'title' => null,
+            'caption' => null,
+            'description' => null,
+            'width' => null,
+            'height' => null,
+            'disk' => $this->getDisk(),
+            'directory' => $this->getDirectory(),
+            'size' => $fakeFile->getSize() ?? null,
+            'visibility' => 'public',
+        ];
+    }
+
+    public function handleVideo(): array
+    {
+        $fakeFile = UploadedFile::fake()->create(
+            name: $this->faker->word . '.mp4',
+            kilobytes: $this->faker->numberBetween(1, 100),
+            mimeType: 'video/mp4',
+        );
+
+        Storage::disk($this->getDisk())->put($this->getDirectory() . '/' . $fakeFile->hashName(), $fakeFile->getContent());
+
+        return [
+            'name' => $fakeFile->hashName(),
+            'path' => $this->getDirectory() . '/' . $fakeFile->hashName(),
+            'ext' => 'mp4',
+            'type' => $fakeFile->getMimeType(),
+            'alt' => $this->faker->words(rand(3, 8), true),
+            'title' => null,
+            'caption' => null,
+            'description' => null,
+            'width' => null,
+            'height' => null,
+            'disk' => $this->getDisk(),
+            'directory' => $this->getDirectory(),
+            'size' => $fakeFile->getSize() ?? null,
+            'visibility' => 'public',
+        ];
+    }
+
+    public function handleImage(): array
+    {
+        $width = $this->faker->numberBetween(100, 2000);
+        $height = $this->faker->numberBetween(100, 2000);
+
+        $fakeFile = UploadedFile::fake()->image(
+            name: $this->faker->word . '.jpg',
+            width: $width,
+            height: $height,
+        );
+
+        Storage::disk($this->getDisk())->put($this->getDirectory() . '/' . $fakeFile->hashName(), $fakeFile->getContent());
+
+        return [
+            'name' => $fakeFile->hashName(),
+            'path' => $this->getDirectory() . '/' . $fakeFile->hashName(),
+            'ext' => 'jpg',
+            'type' => $fakeFile->getMimeType(),
+            'alt' => $this->faker->words(rand(3, 8), true),
+            'title' => null,
+            'caption' => null,
+            'description' => null,
+            'width' => $width,
+            'height' => $height,
+            'disk' => $this->getDisk(),
+            'directory' => $this->getDirectory(),
+            'size' => $fakeFile->getSize() ?? null,
+            'visibility' => 'public',
+        ];
     }
 }

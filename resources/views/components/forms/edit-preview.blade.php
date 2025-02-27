@@ -3,6 +3,15 @@
     'actions' => [],
 ])
 
+@php
+    if (is_array($actions)) {
+        $actions = array_filter(
+            $actions,
+            fn ($action): bool => $action->isVisible(),
+        );
+    }
+@endphp
+
 @if ($file)
 <x-dynamic-component
     :component="$getFieldWrapperView()"

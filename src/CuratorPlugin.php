@@ -2,11 +2,14 @@
 
 namespace Awcodes\Curator;
 
+use Awcodes\Curator\Models\Media;
 use Closure;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Filament\Support\Concerns\EvaluatesClosures;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Gate;
 
 class CuratorPlugin implements Plugin
 {
@@ -183,5 +186,10 @@ class CuratorPlugin implements Plugin
         $this->label = $label;
 
         return $this;
+    }
+
+    public function authorize(string $ability): bool
+    {
+        return is_null(Gate::getPolicyFor(App::make(Media::class))) || Gate::allows($ability, App::make(Media::class));
     }
 }

@@ -3,16 +3,42 @@
 namespace Awcodes\Curator\Models;
 
 use Awcodes\Curator\Concerns\HasPackageFactory;
+use Awcodes\Curator\Support\Helpers;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use League\Glide\Urls\UrlBuilderFactory;
-use Throwable;
 
 use function Awcodes\Curator\is_media_resizable;
 
+/**
+ * @property int $id
+ * @property string $disk
+ * @property string $directory
+ * @property string $visibility
+ * @property string $name
+ * @property string $path
+ * @property int $width
+ * @property int $height
+ * @property int $size
+ * @property string $type
+ * @property string $ext
+ * @property string $alt
+ * @property string $title
+ * @property string $description
+ * @property string $caption
+ * @property array $exif
+ * @property array $curations
+ * @property string $url
+ * @property string $thumbnail_url
+ * @property string $medium_url
+ * @property string $large_url
+ * @property bool $resizable
+ * @property string $size_for_humans
+ * @property string $pretty_name
+ */
 class Media extends Model
 {
     use HasPackageFactory;
@@ -41,25 +67,7 @@ class Media extends Model
     {
         return Attribute::make(
             get: function () {
-                if (
-                    config('curator.should_check_exists', true)
-                    && Storage::disk($this->disk)->exists($this->path) === false
-                ) {
-                    return '';
-                }
-
-                try {
-                    $isPrivate = config('curator.visibility', 'public') === 'private'
-                        || Storage::disk($this->disk)->getVisibility($this->path) === 'private ';
-                } catch (Throwable) {
-                    // ACL not supported on Storage Bucket, Laravel only throws exception here so need to be careful.
-                    // so we assume it's private
-                    $isPrivate = config(sprintf('filesystems.disks.%s.visibility', $this->disk)) !== 'public';
-                }
-
-                return $isPrivate
-                    ? Storage::disk($this->disk)->temporaryUrl($this->path, now()->addMinutes(5))
-                    : Storage::disk($this->disk)->url($this->path);
+                return Helpers::getUrl(disk: $this->disk, path: $this->path);
             },
         );
     }

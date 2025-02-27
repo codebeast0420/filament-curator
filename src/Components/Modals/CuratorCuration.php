@@ -3,6 +3,7 @@
 namespace Awcodes\Curator\Components\Modals;
 
 use Awcodes\Curator\Models\Media;
+use Awcodes\Curator\Support\Helpers;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
@@ -22,11 +23,7 @@ class CuratorCuration extends Component
 
     public function saveCuration($data = null): void
     {
-        if (in_array($this->media->disk, config('curator.cloud_disks'))) {
-            $filePath = Storage::disk($this->media->disk)->url($this->media->path);
-        } else {
-            $filePath = Storage::disk($this->media->disk)->path($this->media->path);
-        }
+        $filePath = Helpers::getUrl(disk: $this->media->disk, path: $this->media->path);
 
         $image = Image::make($filePath);
         $extension = $data['format'] ?? $image->extension;
