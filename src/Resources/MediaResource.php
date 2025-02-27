@@ -99,14 +99,14 @@ class MediaResource extends Resource
                                 static::getUploaderField()
                                     ->required()
                                     ->live()
-                                    ->afterStateUpdated(function ($state, $set, $component) {
+                                    ->afterStateUpdated(function (Forms\Set $set, Uploader $component, $state) {
                                         $name = $component->getSuggestedFileName($state);
                                         $set('name', $name);
                                     })
-                                    ->getUploadedFileNameForStorageUsing(function ($get, $file, $component) {
+                                    ->getUploadedFileNameForStorageUsing(function (Forms\Get $get, Uploader $component, $file) {
                                         $name = $get('name');
 
-                                        return ! $name->isEmpty() ? Str::slug($name) : $component->getSuggestedFileName($file);
+                                        return ! empty($name) ? Str::slug($name) : $component->getSuggestedFileName($file);
                                     }),
                             ]),
                         Forms\Components\Tabs::make('image')

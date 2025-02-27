@@ -6,41 +6,13 @@ use Awcodes\Curator\Concerns\HasPackageFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use League\Glide\Urls\UrlBuilderFactory;
+use Throwable;
 
 use function Awcodes\Curator\is_media_resizable;
 
-/**
- * @property int $id
- * @property string $disk
- * @property string $directory
- * @property string $visibility
- * @property string $name
- * @property string $path
- * @property int $width
- * @property int $height
- * @property int $size
- * @property string $type
- * @property string $ext
- * @property string $alt
- * @property string $title
- * @property string $description
- * @property string $caption
- * @property array $exif
- * @property array $curations
- * @property Carbon $created_at
- * @property Carbon $updated_at
- * @property-read string $url
- * @property-read string $thumbnail_url
- * @property-read string $medium_url
- * @property-read string $large_url
- * @property-read bool $resizable
- * @property-read string $size_for_humans
- * @property-read string $pretty_name
- */
 class Media extends Model
 {
     use HasPackageFactory;
@@ -69,8 +41,6 @@ class Media extends Model
     {
         return Attribute::make(
             get: function () {
-                $isPrivate = false;
-
                 if (
                     config('curator.should_check_exists', true)
                     && Storage::disk($this->disk)->exists($this->path) === false
@@ -81,9 +51,10 @@ class Media extends Model
                 try {
                     $isPrivate = config('curator.visibility', 'public') === 'private'
                         || Storage::disk($this->disk)->getVisibility($this->path) === 'private ';
-                } catch (\Throwable) {
+                } catch (Throwable) {
                     // ACL not supported on Storage Bucket, Laravel only throws exception here so need to be careful.
-                    // so we assume it's private $isPrivate = config(sprintf('filesystems.disks.%s.visibility', $this->disk)) !== 'public';
+                    // so we assume it's private
+                    $isPrivate = config(sprintf('filesystems.disks.%s.visibility', $this->disk)) !== 'public';
                 }
 
                 return $isPrivate
