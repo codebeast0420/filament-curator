@@ -352,6 +352,9 @@ class CuratorPicker extends Field
             ->label(trans('curator::views.picker.view'))
             ->icon('heroicon-s-eye')
             ->color('gray')
+            ->visible(function () {
+                return CuratorPlugin::get()->authorize('view');
+            })
             ->url(function (array $arguments): string {
                 return $arguments['url'];
             }, true);

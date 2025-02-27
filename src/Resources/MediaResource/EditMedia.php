@@ -26,6 +26,9 @@ class EditMedia extends EditRecord
                 ->label(trans('curator::views.panel.edit_save')),
             Action::make('preview')
                 ->color('gray')
+                ->visible(function () {
+                    return CuratorPlugin::get()->authorize('view');
+                })
                 ->url($this->record->url, shouldOpenInNewTab: true)
                 ->label(trans('curator::views.panel.view')),
             DeleteAction::make(),
