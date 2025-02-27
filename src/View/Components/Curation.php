@@ -3,6 +3,7 @@
 namespace Awcodes\Curator\View\Components;
 
 use Awcodes\Curator\Models\Media;
+use Awcodes\Curator\Support\Helpers;
 use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Storage;
@@ -31,28 +32,7 @@ class Curation extends Component
     public function render(): View | string | Closure
     {
         if ($this->curatedMedia) {
-            $disk = $this->curatedMedia['disk'];
-            $path = $this->curatedMedia['path'];
-            $isPrivate = false;
-
-            if (
-                config('curator.should_check_exists', true)
-                && Storage::disk($disk)->exists($path) === false
-            ) {
-                return '';
-            }
-
-            try {
-                $isPrivate = config('curator.visibility', 'public') === 'private'
-                    || Storage::disk($disk)->getVisibility($path) === 'private ';
-            } catch (\Throwable) {
-                // ACL not supported on Storage Bucket, Laravel only throws exception here so need to be careful.
-                // so we assume it's private $isPrivate = config(sprintf('filesystems.disks.%s.visibility', $this->disk)) !== 'public';
-            }
-
-            $this->curatedMedia['url'] = $isPrivate
-                ? Storage::disk($disk)->temporaryUrl($path, now()->addMinutes(5))
-                : Storage::disk($disk)->url($path);
+            $this->curatedMedia['url'] = Helpers::getUrl(disk: $this->curatedMedia['disk'], path: $this->curatedMedia['path']);
         }
 
         return function (array $data) {

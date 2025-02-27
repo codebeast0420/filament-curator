@@ -3,6 +3,7 @@
 namespace Awcodes\Curator\Components\Modals;
 
 use Awcodes\Curator\Models\Media;
+use Awcodes\Curator\Support\Helpers;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
@@ -22,19 +23,7 @@ class CuratorCuration extends Component
 
     public function saveCuration($data = null): void
     {
-        $isPrivate = false;
-
-        try {
-            $isPrivate = config('curator.visibility', 'public') === 'private'
-                || Storage::disk($this->media->disk)->getVisibility($this->media->path) === 'private';
-        } catch (\Throwable) {
-            // ACL not supported on Storage Bucket, Laravel only throws exception here so need to be careful.
-            // so we assume it's private $isPrivate = config(sprintf('filesystems.disks.%s.visibility', $this->disk)) !== 'public';
-        }
-
-        $filePath = $isPrivate
-            ? Storage::disk($this->media->disk)->temporaryUrl($this->media->path, now()->addMinutes(5))
-            : Storage::disk($this->media->disk)->path($this->media->path);
+        $filePath = Helpers::getUrl(disk: $this->media->disk, path: $this->media->path);
 
         $image = Image::make($filePath);
         $extension = $data['format'] ?? $image->extension;
