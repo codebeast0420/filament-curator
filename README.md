@@ -642,11 +642,6 @@ class MediaPolicy
         return true;
     }
 
-    public function view(User $user): bool
-    {
-        return true;
-    }
-
     public function create(User $user): bool
     {
         return true;

@@ -530,9 +530,6 @@ class CuratorPanel extends Component implements HasActions, HasForms
             ->extraAttributes([
                 'style' => 'border: none; margin: 0;',
             ])
-            ->visible(function () {
-                return CuratorPlugin::get()->authorize('view');
-            })
             ->url(function (array $arguments): ?string {
                 if (empty($arguments)) {
                     return null;
