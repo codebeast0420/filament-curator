@@ -96,7 +96,7 @@ class Media extends Model
     protected function fullPath(): Attribute
     {
         return Attribute::make(
-            get: fn () => Storage::disk($this->disk)->path($this->directory . '/' . $this->name . '.' . $this->ext),
+            get: fn () => Storage::disk($this->disk)->path($this->path),
         );
     }
 

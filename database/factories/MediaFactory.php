@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class MediaFactory extends Factory
 {
@@ -100,7 +101,7 @@ class MediaFactory extends Factory
         Storage::disk($this->getDisk())->put($this->getDirectory() . '/' . $fakeFile->hashName(), $fakeFile->getContent());
 
         return [
-            'name' => $fakeFile->hashName(),
+            'name' => pathinfo($fakeFile->hashName(), PATHINFO_FILENAME),
             'path' => $this->getDirectory() . '/' . $fakeFile->hashName(),
             'ext' => 'svg',
             'type' => $fakeFile->getMimeType(),
@@ -128,7 +129,7 @@ class MediaFactory extends Factory
         Storage::disk($this->getDisk())->put($this->getDirectory() . '/' . $fakeFile->hashName(), $fakeFile->getContent());
 
         return [
-            'name' => $fakeFile->hashName(),
+            'name' => pathinfo($fakeFile->hashName(), PATHINFO_FILENAME),
             'path' => $this->getDirectory() . '/' . $fakeFile->hashName(),
             'ext' => 'pdf',
             'type' => $fakeFile->getMimeType(),
@@ -156,7 +157,7 @@ class MediaFactory extends Factory
         Storage::disk($this->getDisk())->put($this->getDirectory() . '/' . $fakeFile->hashName(), $fakeFile->getContent());
 
         return [
-            'name' => $fakeFile->hashName(),
+            'name' => pathinfo($fakeFile->hashName(), PATHINFO_FILENAME),
             'path' => $this->getDirectory() . '/' . $fakeFile->hashName(),
             'ext' => 'mp4',
             'type' => $fakeFile->getMimeType(),
@@ -187,7 +188,7 @@ class MediaFactory extends Factory
         Storage::disk($this->getDisk())->put($this->getDirectory() . '/' . $fakeFile->hashName(), $fakeFile->getContent());
 
         return [
-            'name' => $fakeFile->hashName(),
+            'name' => pathinfo($fakeFile->hashName(), PATHINFO_FILENAME),
             'path' => $this->getDirectory() . '/' . $fakeFile->hashName(),
             'ext' => 'jpg',
             'type' => $fakeFile->getMimeType(),

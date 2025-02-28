@@ -46,7 +46,10 @@ test('factory creates an svg', function () {
 
     Storage::disk($media->disk)->assertExists($media->path);
 
-    expect($media->ext)->toBe('svg');
+    expect($media)
+        ->ext->toBe('svg')
+        ->name->not->toContain('.svg')
+        ->full_path->toBe(Storage::disk($media->disk)->path($media->path));
 });
 
 test('factory creates a document', function () {
@@ -56,7 +59,10 @@ test('factory creates a document', function () {
 
     Storage::disk($media->disk)->assertExists($media->path);
 
-    expect($media->ext)->toBe('pdf');
+    expect($media)
+        ->ext->toBe('pdf')
+        ->name->not->toContain('.pdf')
+        ->full_path->toBe(Storage::disk($media->disk)->path($media->path));
 });
 
 test('factory creates a video', function () {
@@ -66,7 +72,10 @@ test('factory creates a video', function () {
 
     Storage::disk($media->disk)->assertExists($media->path);
 
-    expect($media->ext)->toBe('mp4');
+    expect($media)
+        ->ext->toBe('mp4')
+        ->name->not->toContain('.mp4')
+        ->full_path->toBe(Storage::disk($media->disk)->path($media->path));
 });
 
 test('factory creates an image', function () {
@@ -76,7 +85,10 @@ test('factory creates an image', function () {
 
     Storage::disk($media->disk)->assertExists($media->path);
 
-    expect($media->ext)->toBe('jpg');
+    expect($media)
+        ->ext->toBe('jpg')
+        ->name->not->toContain('.jpg')
+        ->full_path->toBe(Storage::disk($media->disk)->path($media->path));
 });
 
 it('returns correct local url', function () {
